@@ -8,7 +8,10 @@
   - [输出数组内的全部字符串](#输出数组内的全部字符串)
   - [数组深拷贝和浅拷贝](#数组深拷贝和浅拷贝)
   - [创建不规则数组](#创建不规则数组)
-
+  - [创建泛型变长数组](#创建泛型变长数组)
+  
+- [对象包装器和自动装箱](#对象包装器和自动装箱)
+- [参数数量可变的方法](#参数数量可变的方法)
 - [数学函数与常量](#数学函数与常量)
 - [大数值](#大数值)
 - [命名规则](#命名规则)
@@ -18,6 +21,8 @@
 - [文件输入输出](#文件输入输出)
 - [基础日期和时间类](#基础日期和时间类)
 - [随机数生成器](#随机数生成器)
+- [强制类型转换](#强制类型转换)
+- [枚举类型](#枚举类型)
 - 
 
 
@@ -115,7 +120,7 @@ int codePointCount (int startIndex, int endIndex)
   
 String replace (CharSequence oldString, CharSequence newString)      *** 重要
 			/* 返回一个新字符串。 这个字符串用 newString 代替原始字符串中所有的 oldString。 可以用 String 或 StringBuffer 对象作为 CharSequence 参数。 */
-  
+
 String substring (int beginIndex)      *** 重要
 String substring (int beginIndex, int endIndex)
 			/* 返回一个新字符串，这个字符串包含原始字符从 beginIndex 到串尾或 endIndex -1 的所有代码单元 */
@@ -406,8 +411,6 @@ Arrarys 相关API:    java.util.Arrays
   			   //type = int、double、float、long、boolean、char 等
 
 
-
-  
 ```
 
 
@@ -425,6 +428,135 @@ System.out.println(Arrays.deepToString(odds));  //输出一次
 
 输出内容：
  [[0], [0, 0], [0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0, 0]]
+```
+
+
+
+### 创建泛型变长数组
+
+类似于C++的 `vector` 容器。
+
+```java
+// ArrayList 是一个采用类型参数 (type parameter ) 的泛型类(generic class )。
+// <尖括号中不能是基础类型， int、float 等， 可以替换成包装器 ,Integer、Long、Float、Double、Boolean>
+// 创建一个空列表，每次都往里面插入内容，然后该列表会自动增长。
+
+class Employee {};
+Fund fd = new Fund();
+ArrayList<Employee> staff = new ArrayList<Eniployee>( 10 ); // 创建 长度为10 的列表（临时长度）
+ai.add(fd);								// add 添加到数组。
+ai.ensureCapacity(100);   // 将列表扩充到100， 避免以后经常插入导致的底层数据挪移。
+
+
+ArrayList<Employee> staff_coy = staff;		// 浅拷贝， 指向相同的内容。
+
+
+
+ArrayList<E> 相关API:    (这是个类)  import java.util.ArrayList<E>;
+		ArrayList<E> ()
+      /* 构造一个空数组列表。 */
+
+		ArrayList<E> (int initialCapacity)
+      /* 用指定容量构造一个空数组列表.  参数 initalCapacity 数组列表的最初容量 */
+      
+		boolean add (E obj)
+      /* 在数组列表的尾端添加一个元素。永远返回 true。 参数 obj 是添加的元素 */
+      
+		int size()
+      /* 返回存储在数组列表中的当前元素数量。(这个值将小于或等于数组列表的容量) */
+      
+		void ensureCapacity (int capacity)
+      /* 确保数组列表在不重新分配存储空间的情况下就能够保存给定数量的元素。参数 capacity 需要的存储容量 */
+      
+		void trimToSize ()
+      /* 将数组列表的存储容量削减到当前尺寸 */
+		
+		void set (int index, E obj)
+      /* 设置数组列表指定位置的元素值， 这个操作将覆盖这个位置的原有内容， 不可用于添加新的元素。
+       *   参数: index  位置（必须介于 0~ size()-1 之间） 
+       *         obj    新的值 
+       */
+		
+		E get (int index)
+      /* 获得指定位置的元素值。
+       *   参数: index  获取的元素位置（必须介于 0~ size()-1 之间） 
+       */
+		
+		void add (int index, E obj)
+      /* 向后移动元素， 以便插入元素
+       *   参数: index  插入位置（必须介于 0~ size()-1 之间） 
+       *         obj    新元素
+       */
+      
+		E remove (int index)
+      /* 删除一个元素， 并将后面的元素向前移动。 被删除的元素由返回值返回
+       *   参数: index  被删除的元素位置（必须介于 0~ size()-1 之间） 
+       */
+```
+
+
+
+## 对象包装器和自动装箱
+
+基本类型转换为对象。 所有的基本类型都有一个与之对应的类。
+
+包装器内的值是不可以被修改的，包装器
+
+- 这些类称为包装器 ( wrapper ) 
+-  这些对象包装器类 拥有很明显的名字: Integer、Long、Float、Double、Short、Byte、Character、Void 和 Boolean ( 前 6 个类派生于公共的超类 Number)。 对象包装器类是不可变的， 即一旦构造了包装器， 就不 允许更改包装在其中的值。同时，对象包装器类还是final, 因此不能定义它们的子类。
+  - `Integer` 类对应基本类型 int 
+  - `Long` 
+  - `Float`
+  - `Double`
+  - `Short`
+  - `Byte`
+  - `Character`
+  - `Void`
+  - `Boolean`
+- 除`Boolean`外，其他类派生于公共的超类 `Number`
+
+==**`==`  运算符也可以应用于对象包装器对象， 只不过检测的是对象是否指向同一个存储区域，应该使用 `equals` 方法来进行对比**==
+
+```java
+ArrayList<Integer> list = new ArrayList<>();   // 这样就生成了一个 int 数组。 是包装器。
+
+自动装箱特性：
+  list.add(3);		 //这个会自动变成后面的这种类型 list.add(Integer.valueOf(3));  这个就是自动装箱
+
+也可以自动拆箱：
+  int n = list.get(i) // 会自动翻译成: int n = list.get(i).inValue();
+  
+
+Integer<E> 相关API:    (这是个类)  import java.lang.Integer<E>;
+		int intValue ()
+      /* 以 int 的形式返回 Integer 对象的值 (在 Number 类中覆盖了 intValue 方法)。 */
+      
+    static String toString ()
+      /* 以一个新 String 对象的形式返回给定数值 i 的十进制表示 */
+      
+    static String toString (int i, int radix)
+      /* 返回数值 i 的基于给定 radix 参数进制的表示。 */
+      
+    static int parseInt (String s)
+    static int parseInt (String s, int radix)
+      /* 返回字符串 s 表示的整型数值， 给定字符串表示的是十进制的整数 (第一种方法) 或者是 radix 参数进制的整数 (第二种方法 ) */
+
+    static Integer valueOf (String s)
+    static Integer valueOf (String s, int radix)
+      /* 返回用 s 表示的整型数值进行初始化后的一个新 Integer 对象， 给定字符串表示的是十进制的整数 (第一种方法 ) 或者是 radix 参数进制的整数 (第二种方法 ) */
+
+    Number parse (String s)
+      /* 返回数字值， 假设给定的 String 表示了一个数值。*/
+```
+
+
+
+## 参数数量可变的方法
+
+```java
+
+void printf(String fmt, Object...  obj);
+
 ```
 
 
@@ -698,4 +830,113 @@ Random 相关API:    (这是个类)  import java.util.Random;
       /* 返回一个 0 ~ n-1 之间的随机数 */
 
 ```
+
+
+
+## 强制类型转换
+
+```java
+子类可以转换成父类引用， 但是父类引用转换成子类引用时，尽量判断和捕获一个 异常。
+在强制类型转换错误时， Java 运行时系统将报告这个错误， 并产生一个 ClassCastException 异常，应该捕获和修复该异常。 
+
+在进行类型转换之前， 先查看一下是否能够成功地转换。这个过程简单地使用 instanceof 操作符就可以实现。
+  
+Manager boss = (Mangager) staff[1]; // 错误的转换 ，应该变成如下格式
+
+if (staff[1] instanceof Manager )  //判断这个过程。 staff[1] 是否可以转换成  Manager 类引用。
+{
+  boss = (Mangager) staff[1];		// 如果可以正常转换， 就会来到这里
+}
+else
+{
+  	无法转换的其他处理。
+}
+  
+  
+```
+
+
+
+
+
+## 枚举类型
+
+```java
+在比较两个枚举类型的值时， 永远不需要调用 equals, 而直接使用“ == ” 就可以了。
+所有的枚举类型都是 Enum 类的子类。它们继承了这个类的许多方法。其中最有用的一 个是 toString， 这个方法能够返回枚举常量名。
+
+public class Main {
+    public enum Size{ ONE ,TWO ,THERE };
+
+    public static void main(String[] args) {
+        Size on =  Size.ONE ;
+        Size tow =  Size.TWO ;
+        if (on == tow)
+        {
+            System.out.println(on);
+        }
+        else
+        {
+            System.out.println(tow);
+        }
+
+    }
+}
+
+
+
+/** 
+*   枚举类， 可以在枚举类型中添加一些构造器、 方法和域。 构造器只是在构造枚举常量的时候被调用
+*/
+
+public enum Size {
+    SMALL("S"),MEDIUM("M"),LARGE("L"),EXTRA_LARGE("XL");
+    private String abbre;
+    private Size(String abbret) {this.abbre = abbret;}
+    public String getAbbre(){return abbre;};
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Size p = Size.SMALL;
+        System.out.println( p.getAbbre());	// 会输出 S
+	      System.out.println( p.toString());	// 会输出 SMALL
+        Size M = Size.MEDIUM;
+        System.out.println( M.getAbbre());	// 会输出 M
+        System.out.println( M.toString());	// 会输出 MEDIUM
+      
+        System.out.println(M.ordinal());		// 会输出 1
+        System.out.println(p.ordinal());		// 会输出 0
+      
+      	Size sp = Enum.valueOf(Size.class, "LARGE");
+        System.out.println(sp.toString());		//  会输出 LARGE
+    }
+}
+```
+
+```java
+java.lang.Enum<E> API  , enum 是枚举类
+	  static Enum valueOf (Class enumClass, String name)
+  			/* 返回指定名字、 给定类的枚举常量。 */
+  
+  	String toString ()
+  			/* 返回指定名字、 给定类的枚举常量。 */
+  	
+  	int ordinal ()
+  			/* 返回枚举常量在 enum 声明中的位置， 位置从 0 开始计数。*/
+  
+		int compareTo (E other)
+  			/* 如果枚举常量出现在 Other 之前， 则返回一个负值; 如果 this==other， 则返回 0; 否则， 返回正值。枚举常量的出现次序在 enum 声明中给出。*/
+  
+```
+
+
+
+
+
+
+
+
+
+
 
