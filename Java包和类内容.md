@@ -10,6 +10,12 @@
   - [抽象类](#抽象类)
   
 - [反射](#反射)
+  - [反射解析类内容](#反射解析类内容)
+  - [运行时使用反射分析对象](#运行时使用反射分析对象)
+
+- [异常](#异常)
+  - [捕获异常](#捕获异常)
+
 - [Object所有类的超类](#Object所有类的超类)
 - 
 
@@ -258,6 +264,8 @@ public class Child extends  Fund
 
 ## 反射
 
+**反射则是一开始并不知道我要初始化的类对象是什么，自然也无法使用 new 关键字来创建对象。**
+
 **反射: 是指在程序运行期间发现更多的类及其属性的能力。**
 
 **反射库(reflection library) 提供了一个非常丰富且精心设计的工具集， 以便编写能够动态操纵 Java 代码的程序。**
@@ -270,6 +278,357 @@ public class Child extends  Fund
     - 在运行时查看对象， （例如， 编写一个 toString 方法供所有类使用）
     - 实现通用的数组操作代码。
     - 利用 Method 对象， 这个对象很像 C++ 中的函数指针。
+
+```java
+public class Main {
+    public static void main(String[] args) throws ClassNotFoundException {
+      	// Object 类中的 getClass( ) 方法将会返回一个 Class 类型的实例
+       Employee e = new Employee("名称",1.0,2,3,4);
+       System.out.println(e.getClass().getName());		// 输出： inheritance.Employee
+			
+      	// 如果类在一个包里， 包的名字也作为类名的一部分:
+        Random generator = new Random();
+        Class cl = generator.getClass();
+        String name = cl.getName();
+        System.out.println(name);  			// 输出： java.util.Random
+
+      	// 还可以调用静态方法 forName 获得类名对应的 Class 对象。
+        Class newcl = Class.forName(name);
+        System.out.println(newcl.toString()); 		// 输出： class java.util.Random
+      // 如果类名保存在字符串中， 并可在运行中改变，就可以使用这个方法。
+      // 这个方法 只有在 className 是类名或接口名时才能够执行
+      
+     //  获得 Class 类对象的第三种方法非常简单。如果 T 是任意的 Java 类型(或 void 关键字，) T.class 将代表匹配的类对象。
+        Class cl1 = Random.class;
+        Class cl2 = int.class;
+        Class cl3 = Double[].class;
+      // 一个 Class 对象实际上表示的是一个类型， 而这个类型未必一定是一种类。 例如， int 不是类， 但 int.class 是一个 Class 类型的对象。
+    }
+}
+
+
+
+
+Class 相关API:    (这是个类)  import java.lang.Class;
+		static Class  forName (String className)
+      /* 返回描述类名为 className 的 Class 对象 */
+
+		Object newInstance ()
+      /* 返回这个类的一个新实例, 需要调用无参数构造 */
+
+Constructor 相关API:    (这是个类)  import java.lang.reflect.Constructor;
+		Object newInstance (Object[] args)    // JDK 18 已弃用
+      /* 构造一个这个构造器所属类的新实例。 带参数的
+      	 参数： args   这是提供给构造器的参数。 	
+      */
+```
+
+**Class类中的getFields、getMethods和getConstructors方法将分别返回类提供的 public 域、 方法和构造器数组， 其中包括超类的公有成员。 Class 类的 getDeclareFields、 getDeclareMethods 和getDeclaredConstructors 方法将分别返回类中声明的全部域、 方法和构 造器， 其中包括私有和受保护成员， 但不包括超类的成员。**
+
+```java
+/* 
+ * 读取输入的类名，打印类的内容和方法内容
+*/
+public class ReflectionTest {
+    public static void main(String[] args)  {
+        // 从命令行 读取类名
+        String name = new String("java.lang.Double");
+//        if(args.length > 0)
+//        {
+//            name = args[0];
+//        }
+//        else
+//        {
+//            Scanner in = new Scanner(System.in);
+//            System.out.println("Enter class name (e.g java.util.Date);");
+//            name = in.next();
+//        }
+        try {
+            // 输出类名和基类名 （if != Object)
+            Class cl = Class.forName(name);  // 获得类名 class java.lang.Double
+            Class supercl = cl.getSuperclass();  // 获得 父类 类名 class java.lang.Number
+            String modifiers = Modifier.toString(cl.getModifiers()); // 获得 类的类型 public final
+            if (modifiers.length() > 0)
+            {
+                System.out.print(modifiers + " ");
+            }
+            System.out.print("class " + name);
+            if (supercl != null && supercl != Object.class)
+            {
+                System.out.print("extends " + supercl.getName() );
+            }
+            System.out.print("\n{\n");
+            printConstructors(cl);
+            System.out.println();
+            printMethods(cl);
+            System.out.println();
+            printFields(cl);
+            System.out.println("}");
+        }
+        catch (ClassNotFoundException e)
+        {
+            e.printStackTrace();
+        }
+        System.exit(0);
+    }
+
+    public static void printConstructors(Class cl)
+    {
+        Constructor[] constructors = cl.getDeclaredConstructors();
+
+        for (Constructor c: constructors)
+        {
+            String name = c.getName();
+            System.out.print("  ");
+            String modifiers = Modifier.toString(c.getModifiers());
+            if (modifiers.length() > 0)
+            {
+                System.out.print(modifiers + " ");
+            }
+            System.out.print(name + "(");
+
+            // 输出参数类型
+            Class[] paramTypes = c.getParameterTypes();
+            for (int j = 0; j < paramTypes.length ; j++)
+            {
+                if (j > 0)
+                {
+                    System.out.print(", ");
+                }
+				System.out.print(paramTypes[j].getName());
+            }
+            System.out.println(");");
+        }
+    }
+
+    public  static void printMethods(Class cl)
+    {
+        Method[] methods = cl.getDeclaredMethods();
+
+        for (Method m : methods)
+        {
+            Class retType = m.getReturnType();
+            String name = m.getName();
+
+            System.out.print("  ");
+
+            // 输出返回类型
+            String modifiers = Modifier.toString(m.getModifiers());
+            if(modifiers.length() > 0)
+            {
+                System.out.print(modifiers + " ");
+                System.out.print(retType.getName() + " " + name  + "(");
+
+                // 打印参数类型
+                Class[] paramTypes = m.getParameterTypes();
+                for(int j = 0; j< paramTypes.length ; j++)
+                {
+                    if ( j>0 )
+                    {
+                        System.out.print(", ");
+                    }
+                    System.out.print(paramTypes[j].getName());
+                }
+                System.out.println(");");
+            }
+        }
+    }
+
+    public  static void printFields(Class cl)
+    {
+        Field[] fields = cl.getDeclaredFields();
+
+        for (Field f : fields)
+        {
+            Class type = f.getType();
+            String name = f.getName();
+            System.out.print("   ");
+            String modifiers = Modifier.toString(f.getModifiers());
+            if (modifiers.length() > 0)
+                System.out.print(modifiers + " ");
+            System.out.println(type.getName() + " " + name + ";");
+        }
+    }
+}
+
+
+/* 输出内容如下：
+public final class java.lang.Doubleextends java.lang.Number
+{
+  public java.lang.Double(double);
+  public java.lang.Double(java.lang.String);
+
+  public boolean equals(java.lang.Object);
+  public static java.lang.String toString(double);
+  public java.lang.String toString();
+  public int hashCode();
+  public static int hashCode(double);
+  public static double min(double, double);
+  public static double max(double, double);
+  public boolean isInfinite();
+  public static boolean isInfinite(double);
+  public static native long doubleToRawLongBits(double);
+  public static long doubleToLongBits(double);
+  public static native double longBitsToDouble(long);
+  public int compareTo(java.lang.Double);
+  public volatile int compareTo(java.lang.Object);
+  public static int compare(double, double);
+  public byte byteValue();
+  public short shortValue();
+  public int intValue();
+  public long longValue();
+  public float floatValue();
+  public double doubleValue();
+  public static java.lang.Double valueOf(double);
+  public static java.lang.Double valueOf(java.lang.String);
+  public static java.lang.String toHexString(double);
+  public volatile java.lang.Object resolveConstantDesc(java.lang.invoke.MethodHandles$Lookup);
+  public java.lang.Double resolveConstantDesc(java.lang.invoke.MethodHandles$Lookup);
+  public java.util.Optional describeConstable();
+  public boolean isNaN();
+  public static boolean isNaN(double);
+  public static double sum(double, double);
+  public static boolean isFinite(double);
+  public static double parseDouble(java.lang.String);
+
+   public static final double POSITIVE_INFINITY;
+   public static final double NEGATIVE_INFINITY;
+   public static final double NaN;
+   public static final double MAX_VALUE;
+   public static final double MIN_NORMAL;
+   public static final double MIN_VALUE;
+   public static final int SIZE;
+   public static final int PRECISION;
+   public static final int MAX_EXPONENT;
+   public static final int MIN_EXPONENT;
+   public static final int BYTES;
+   public static final java.lang.Class TYPE;
+   private final double value;
+   private static final long serialVersionUID;
+}
+*/
+
+Class 相关API:    (这是个类)  import java.lang.Class;
+		Field[]  getFields ()
+		Field[]  getDeclaredFields ()
+      /* getFields 方法将返回一个包含 Field 对象的数组， 这些对象记录了这个类或其超类的公有域。
+      	 getDeclaredField 方法也将返回包含 Field 对象的数组， 这些对象记录了这个类的全部域。 
+      	 如果类中没有域， 或者 Class 对象描述的是基本类型或数组类型，这些方法将返回一个长度为 0 的数组 */
+
+		Method[] getMethods ()
+		Method[] getCeclareMethods ()
+      /* 返回包含 Method 对象的数组: getMethods 将返回所有的公有方法， 包括从超类继承 来的公有方法;
+         getDeclaredMethods 返回这个类或接口的全部方法， 但不包括由超类继承了的方法。 */
+
+    Constructor   getConstructor ()
+    Constructor[] getConstructors ()
+    Constructor[] getDeclaredConstructors ()
+	    /* 	返回包含 Constructor 对象的数组， 其中包含了 Class 对象所描述的类的所有公有构造器(getConstructors) 或所有构造器(getDeclaredConstructors。) */
+
+Field 相关API:    (这是个类)  import java.lang.reflect.Field;
+Method 相关API:    (这是个类)  import java.lang.reflect.Method;
+Constructor 相关API:    (这是个类)  import java.lang.reflect.Constructor;
+		Class  getDeclaringClass ()
+      /* 返回一个用于描述符类中定义的构造器、方法域的 Class 对象 */
+      
+		Class[]  getExceptionTypes ()    (在 Constructor 和 Method 类中)
+      /* 返回一个用于描述方法抛出的异常类型的 Class 对象数组。 */
+	
+    int getModifiers ()
+      /* 返回一个用于描述构造器、方法或域的修饰符的整型数值。使用 Modifier 类中的这个方法可以分析这个返回值。 */
+    
+    String getName()
+      	/*  返冋一个用于描述构造器、 方法或域名的字符串。 */
+      
+    Class[]  getParameterTypes ()    (在 Constructor 和 Method 类中)
+      	/*  返回一个用于描述参数类型的 Class 对象数组。 */
+
+    String getReturnType()      (在 Method 类中)
+      	/*  返回一个用于描述返回类型的 Class 对象。 */
+
+Modifier 相关API:    (这是个类)  import java.lang.reflect.Modifier;
+    static  String toString (int modifiers)
+      	/*  返回对应 modifiers 中位设置的修饰符的字符串表示。*/
+
+    static boolean isAbstract  (int modifiers)
+    static boolean isFinal     (int modifiers)
+    static boolean isInterface (int modifiers)
+    static boolean isNative    (int modifiers)
+    static boolean isPrivate   (int modifiers)
+    static boolean isProtected (int modifiers)
+    static boolean isPublic    (int modifiers)
+    static boolean isStatic    (int modifiers)
+    static boolean isstrict    (int modifiers)
+    static boolean isSyncchronized (int modifiers)
+    static boolean isVolatile  (int modifiers)
+      	/*  这些方法将检测方法名中对应的修饰符在 modifiers 值中的位  */
+
+```
+
+
+
+### 运行时使用反射分析对象
+
+**利用反射机制可以查看在编译时还不清楚的对象域。**
+
+查看对象域的关键方法是 `Field` 类中的 get 方法。 (只允许査看任意对象有哪些域， 而不允许读取它们的值) ，如果 f 是一个 Field 类型的对象(例如， 通过 getDeclaredFields 得到的对象，) obj 是某个包含 f 域的类的对象， f.get(obj) 将返回一个 对象， 其值为 obj 域的当前值。
+
+```java
+
+
+
+AccessibleObject 相关API:    (这是个类)  import java.lang.reflect.AccessibleObject;
+    void  setAccessible (boolean flag)
+      	/*  为反射对象设置可访问标志。 flag 为 true 表明屏蔽 Java 语言的访问检查， 使得对象的 私有属性也可以被査询和设置。 */
+      
+    boolean  isAccessible ()
+      	/*  返回反射对象的可访问标志的值。 */
+      
+    static void  setAccessible ( AccessibleObject[] array, boolean flag)
+      	/*  是一种设置对象数组可访问标志的快捷方法。 */
+      
+      
+Class 相关API:    (这是个类)  import java.lang.Class;
+    Field    getField (String name)
+    Field[]  getField ()
+      	/* 返回指定名称的公有域， 或包含所有域的数组。 */
+      
+    Field    getDeclaredField (String name)
+    Field[]  getDeclaredFields ()
+      	/* 返回类中声明的给定名称的域， 或者包含声明的全部域的数组。 */
+      
+Field 相关API:    (这是个类)  import java.lang.reflect.Field;
+    Object   get (Object obj)
+      	/* 返回 obj 对象中用 Field 对象表示的域值。 */
+      
+    void  set (Object obj, Object newValue)
+      	/* 用一个新值设置 Obj 对象中 Field 对象表示的域。 */
+```
+
+
+
+
+
+## 异常
+
+### 捕获异常
+
+```java
+try 
+{
+  可能会抛出异常的代码段
+} 
+catch(Exception e)
+{
+  	处理异常代码
+}
+
+ Throwable 相关API:    (这是个类)  import java.lang.Throwable;  Exception 继承于 Throwable
+		void  printStackTrace ()
+      /* 将 Throwable 对象和栈的轨迹输出到标准错误流。 */
+```
+
+
 
 
 
