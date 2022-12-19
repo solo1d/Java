@@ -6,6 +6,7 @@
 - [设置类路径](#设置类路径)
 - [类、超类和子类](#类、超类和子类)
   - [子类](#子类)
+  - [继承的设计技巧](#继承的设计技巧)
   - [阻止继承final类和方法](#阻止继承final类和方法)
   - [抽象类](#抽象类)
   
@@ -194,6 +195,20 @@ public class Child  extends Fund
 
 }
 ```
+
+
+
+### 继承的设计技巧
+
+1. 将公共操作和域（类内的变量、常量等）放在超类。
+2. 不要使用受保护的域。 （protected)
+3. 使用继承实现“ is-a”关系。
+4. 除非所有继承的方法都有意义， 否则不要使用继承。
+5. 在覆盖方法时， 不要改变预期的行为。
+6. 使用多态， 而非类型信息。
+7. 不要过多地使用反射。
+
+
 
 
 
@@ -564,6 +579,100 @@ Modifier 相关API:    (这是个类)  import java.lang.reflect.Modifier;
       	/*  这些方法将检测方法名中对应的修饰符在 modifiers 值中的位  */
 
 ```
+
+### 反射解析类内容
+
+1. **使用反射获取一个对象的步骤：**
+   1. 获取类的 Class 对象实例。 `Class cl = Class.forName("TestCJ");`
+   2. 根据 Class 对象实例获取 Constructor 对象。`Constructor CJcon = cl.getConstructor();`
+   3. 使用 Constructor 对象的 newInstance 方法获取反射类对象。  `Object obj = CJcon.newInstance();`
+2. **而如果要调用某一个方法，则需要经过下面的步骤：**
+   1. 获取方法的 Method 对象。 `Method setMet = cl.getMethod("getI", int.class);`
+   2. 利用 invoke 方法调用方法。 `setMet.invoke(obj, 1);`
+3. **在反射中，要获取一个类或调用一个类的方法，首先需要获取到该类的 Class 对象， 获取反射中的Class对象的三种方法：**
+   1. **第一种，使用 Class.forName 静态方法。**当你知道该类的全路径名时，你可以使用该方法获取 Class 类对象。`Class cl = Class.forName("java.lang.String"); `
+   2. **第二种，使用 .class 方法**。 (这种方法只适合在编译前就知道操作的 Class) `Class clz = String.class;`
+   3. **第三种，使用类对象的 getClass() 方法。** `String str = new String("Hello"); Class clz = str.getClass();`
+4. **通过反射创建类对象 主要有两种方式**
+   1. 第一种：通过 Constructor 对象的 newInstance() 方法， 默认构造（无参数）。 `Class zlca = Class.forName("TestCJ"); Constructor retClas = zlca.getConstructor();  TestCJ  tecj = (TestCJ) retClas.newInstance(); `
+   2. 第一种：通过 Constructor 对象创建类对象可以选择特定构造方法。有参构造 ，一个 int参数。`Class zlca = Class.forName("TestCJ"); Constructor retClasCZ = zlca.getConstructor(int.class); TestCJ  tecjCZ = (TestCJ) retClasCZ.newInstance(123);`
+5. 通过反射获取类属性、方法、构造器:
+   1. `Class clz = Class.forName("TestCJ");Field[] fields = clz.getDeclaredFields();for (Field field : fields) { System.out.println(field.getName());}  `
+
+```java
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+
+public class TestCJ {
+    public int pplll;
+
+    public TestCJ()
+    {
+        pplll = 1;
+    }
+
+    public TestCJ(int t)
+    {
+        pplll = t;
+    }
+
+    public int  getI(int p )
+    {
+        return pplll;
+    }
+
+
+    static public void main(String argv[]) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
+        // 用反射获取类对象，并调用类中的函数。 但不适合 无默认构造器的类
+        Class cl = Class.forName("TestCJ");   // 获取类的 Class 对象实例
+        Constructor CJcon = cl.getConstructor();       // 根据 Class 对象实例获取 Constructor 对象
+        Object obj = CJcon.newInstance();               // 使用 Constructor 对象的 newInstance 方法获取反射类对象
+        Method setMet = cl.getMethod("getI", int.class);    // 获取方法的 Method 对象 ，指定调用的函数,和参数类
+        System.out.println(setMet.invoke(obj, 1));        // 利用 invoke 方法调用方法， 调用指定的函数和参数
+
+        // 这样也可以调用。
+        System.out.println(((TestCJ) obj).getI(1));
+
+        // 创建类 带参数的构造器 ， 获得类对象
+        Class clt = Class.forName("TestCJ");
+        Constructor constructor = clt.getConstructor(int.class);
+        TestCJ tcj = (TestCJ) constructor.newInstance(1234);
+        System.out.println(tcj.getI(1));
+
+
+        Class clz = Class.forName("TestCJ");
+        Field[] fields = clz.getDeclaredFields();   // 获得成员名，包括私有和公共
+        for (Field field : fields) {
+            System.out.println(field.getName());    // 输出成员名，包括私有和公共
+        }
+
+        //通过反射创建类对象 1 无参数
+        Class zlca = Class.forName("TestCJ");
+        Constructor retClas = zlca.getConstructor();  // 默认构造（无参数）
+        TestCJ  tecj = (TestCJ) retClas.newInstance();
+        System.out.println(tecj.getI(1));
+
+        //通过反射创建类对象 2 有参构造
+        Constructor retClasCZ = zlca.getConstructor(int.class); // 有参构造 ，一个 int参数
+        TestCJ  tecjCZ = (TestCJ) retClasCZ.newInstance(123);
+        System.out.println(tecjCZ.getI(1));
+
+    }
+}
+
+
+Method 相关API:    (这是个类)  import java.lang.reflect.Method;
+    public  Object invoke (Object implicitparaameter, Object[] explicitParamenters)
+      	/*  调用这个对象所描述的方法， 传递给定参数， 并返回方法的返回值。 对于静态方法， 把 null 作为隐式参数传递。 在使用包装器传递基本类型的值时， 基本类型的返回值必须是未包装的。*/
+
+
+```
+
+
+
+
 
 
 
