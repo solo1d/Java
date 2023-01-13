@@ -5,7 +5,11 @@
   - [Comparator比较器接口](#Comparator比较器接口)
   - [Cloneable对象克隆接口](#Cloneable对象克隆接口)
 - [lambda表达式](#lambda表达式)
-- 
+  - [lamdba多种样式组合](#lamdba多种样式组合)
+- [内部类](#内部类)
+  - [局部内部类](#局部内部类)
+  - [静态内部类](#静态内部类)
+  - 
 
 
 
@@ -420,11 +424,359 @@ class TimedGree extends Termc{
 
 ```
 
+### lamdba多种样式组合
+
+```java
+import javax.swing.*;
+import java.awt.event.ActionListener;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+
+
+public class main {
+
+    interface  If1{
+        void test();  // 无参数
+    }
+
+    @FunctionalInterface
+    interface  If2{
+        int test(int t1);  // lambda有参数 有返回值
+    }
+
+    public int mytestLamdbaFunc(int m1)
+    {
+        return m1-1;
+    }
+
+    @FunctionalInterface   // 说明该接口是给 lambda 使用的。 且里面只能有一个抽象方法
+    interface DogService{
+        Dog getDog();  // 通过构造方法来返回 Dog 对象。
+    }
+
+    @FunctionalInterface   // 说明该接口是给 lambda 使用的。 且里面只能有一个抽象方法
+    interface DogService2{
+        Dog getDog(String _name, int _age);  // 通过构造方法来返回 Dog 对象。
+    }
+
+     static public int mytestLamdbaFuncStatic(int m1) {
+        return m1-1;
+    }
+
+    public static void main(String[] args) throws IOException {
+        If1  if1 = ()->{ System.out.println("lambda无参数 无返回值");};
+        if1.test();
+
+        If2 if2 = (t1)->{ return t1; };
+        If2 if2_1 = (t1)->t1-4;   // 这个就是上面的简化 省略了 return . 如果想要省略return, 那么必须取消大括号{}
+        System.out.println("lambda有参数 有返回值:" + if2.test(2)  + ",更加简化:" + if2_1.test(3) );
+
+        main mm = new main();
+        If2 if2_main = mm::mytestLamdbaFunc;
+        System.out.println("lambda有参数 有返回值,使用对象中的函数方法:" + if2_main.test(123));
+
+        If2 if2_static = main::mytestLamdbaFuncStatic;
+        System.out.println("lambda有参数 有返回值,使用类中的静态函数方法:" + if2_static.test(24));
+
+
+        DogService dogs1 = Dog::new;  // 无参构造方法引用
+        Dog dog1 = dogs1.getDog();
+        System.out.println("lambda无参构造方法引用: dog1="+ dog1);
+
+        DogService2 dogs2 = Dog::new;
+        Dog dog2 = dogs2.getDog("有参数",2);
+        System.out.println("lambda有参构造方法引用: dog2="+ dog2);
+
+
+        List<Dog> list = new ArrayList<>();
+        list.add(new Dog("aa", 1));
+        list.add(new Dog("bb", 3));
+        list.add(new Dog("cc", 5));
+        list.add(new Dog("dd", 2));
+        list.add(new Dog("ee", 4));
+
+        System.out.println("lamdba 表达式集合排序");
+        list.sort((o1,o2)->{return o1.getAge() - o2.getAge();});
+
+        System.out.println(list);
+
+        System.out.println("lamdba 表达式遍历集合");
+        list.forEach(System.out::println);
+    }
+}
+
+class Dog {
+    private String name;
+    private int age;
+    public Dog(String _name ,int _age){
+        name = _name;
+        age = _age;
+    }
+
+    public Dog(){
+        name = "无姓名";
+        age = -1;
+    }
+    public int getAge(){
+        return age;
+    }
+
+    public String toString()
+    {
+        return "[name=" + name + ",age=" + age + "]";
+    }
+
+}
+```
 
 
 
 
 
+## 内部类
+
+内部类可以访问外围类的私有数据
+
+```java
+package innerClass;
+
+import javax.swing.*;
+
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.Date;
+
+public class InnerClassTest {
+    public static void main(String[] args) {
+        TalkingClock clock = new TalkingClock(1000,true);
+        clock.start();
+
+        TalkingClock.TimePrinter tp =  clock.new TimePrinter();  // 这样来创建内部类对象。
+        System.out.println(tp.getChild());
+
+        JOptionPane.showMessageDialog(null, "Quit program?");
+        System.exit(0);
+    }
+}
+
+
+class TalkingClock
+{
+    private  int interval;
+    private  boolean beep;
+
+    public TalkingClock(int interval, boolean beep)
+    {
+        this.interval = interval;
+        this.beep = beep;
+    }
+
+    public void start ()
+    {
+        ActionListener listener = this.new TimePrinter();
+        Timer t = new Timer(interval, listener);
+        t.start();
+    }
+    public int getInterval()
+    {
+        return  interval;
+    }
+
+    public class TimePrinter implements ActionListener
+    {
+        public int child = 0;
+        public int getChild()
+        {
+            return  child + TalkingClock.this.getInterval();
+        }
+        public void actionPerformed(ActionEvent event)
+        {
+            System.out.println( TalkingClock.this.getInterval());  // 访问外部类的内容。
+            System.out.println("At the tone the time is "+new Date());
+            if(beep)
+                Toolkit.getDefaultToolkit().beep();
+        }
+    }
+}
+```
+
+
+
+### 局部内部类
+
+ 局部类不能用 public 或 private 访问说明符进行声明。它的作用域被限定在声明这个局部类的块中。
+
+局部内部类对外部世界可以完全地隐藏起来。
+
+```java
+class TalkingClock
+{
+  private  int interval;
+  
+ 	public void start()
+  {
+    // 局部类不能用 public 或 private 访问说明符进行声明。它的作用域被限定在声明这个局部类的块中。
+    class TimerPr implements ActionListener 
+    {
+      	public void actionPerformed(ActionEvent event)
+        {
+            System.out.println("局部内部类"+new Date());
+        }
+      	
+      ActionListener listner = new  new TimerPr();
+	    Timer t = new Timer(interval listner);
+		  t.start();
+		}
+  }  
+}
+```
+
+```java
+package innerClass;
+
+import javax.swing.*;
+
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.Date;
+
+public class InnerClassTest {
+    public static void main(String[] args) {
+        TalkingClock clock = new TalkingClock(1000,true);
+        clock.start();
+
+        TalkingClock.TimePrinter tp =  clock.new TimePrinter();  // 这样来创建内部类对象。
+        System.out.println(tp.getChild());
+
+        // 创建匿名类并使用
+        System.out.println( new ArrayList<String>() {{add("Harry"); add("Tony");}}  ) ;
+        System.out.println("获得外围类类型：" + new Object(){}.getClass().getEnclosingClass() ) ; // InnerClassTest
+
+        JOptionPane.showMessageDialog(null, "Quit program?");
+        System.exit(0);
+    }
+}
+
+
+class TalkingClock
+{
+    private  int interval;
+    private  boolean beep;
+
+    public TalkingClock(int interval, boolean beep)
+    {
+        this.interval = interval;
+        this.beep = beep;
+    }
+
+    public boolean getbeep(){
+        return beep;
+    }
+    public void start ()
+    {
+        ActionListener listener = this.new TimePrinter();
+        Timer t = new Timer(interval, listener);
+        t.start();
+
+        class Timep {
+            public boolean get()
+            {
+                return getbeep();
+            }
+        }
+
+    }
+    public int getInterval()
+    {
+        return  interval;
+    }
+
+    public class TimePrinter implements ActionListener
+    {
+        public int child = 0;
+        public int getChild()
+        {
+            return  child + TalkingClock.this.getInterval();
+        }
+        public void actionPerformed(ActionEvent event)
+        {
+            System.out.println( TalkingClock.this.getInterval());  // 访问外部类的内容。
+            System.out.println("At the tone the time is "+new Date());
+            if(beep)
+                Toolkit.getDefaultToolkit().beep();
+        }
+    }
+}
+```
+
+
+
+### 静态内部类
+
+这样就会产生名字冲突。解决这个问题的办法 是将 Pair 定义为 ArrayAlg 的内部公有类
+
+在 Pair 对象中不需要引用任何其他的对象， 为此， 可以将这个内部类声明为 static
+
+```java
+package staticInnerClass;
+
+public class StaticInnerClassTest {
+    public static void main(String[] args) {
+        double[] d = new double[20];
+        for (int i= 0; i < d.length ; i++)
+        {
+            d[i] = 100 * Math.random();
+        }
+        ArrayAlg.Pair p = ArrayAlg.minmax(d);
+        System.out.println("min = " + p.getFirst());
+        System.out.println("max = " + p.getSecond());
+    }
+}
+
+class ArrayAlg
+{
+    public static class Pair
+    {
+        private double first;
+        private double second;
+
+        public Pair(double f, double s)
+        {
+            first = f;
+            second = s;
+        }
+
+        public double getFirst()
+        {
+            return  first;
+        }
+
+        public double getSecond() {
+            return second;
+        }
+    }
+
+    public static Pair minmax (double[] values)
+    {
+        double min = Double.POSITIVE_INFINITY;
+        double max = Double.NEGATIVE_INFINITY;
+        System.out.println("min=" + min + ", max=" + max );
+        for (double v : values)
+        {
+            if (min > v) min = v;
+            if (max < v) max = v;
+        }
+        return new Pair(min, max);
+    }
+}
+
+
+```
 
 
 
