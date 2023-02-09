@@ -750,10 +750,12 @@ Console 相关API:    (这是个类)  java.lang.System   java.io.Console
  fOut.flush();				// 更新到文件
 
 
+// 判断是否还有输入（ 文件或缓冲区是否读取完成）
+	Scanner in = new Scanner(Paths.get(dir + "/a.txt"), "UTF-8");
+  if( in.hasNext() == true ) { 文件或缓冲区还有内容，可以继续读取 }
 
 // 程序启动时 重定向文件成 System.in 或 System.out  ，也不必担心处理 IOException 异常了。
 $	java MyProg < r.txt > o.txt				// 启动java程序 MyProg ，输入文件 r.txt ，输出文件 o.txt
-  
   
   
 
