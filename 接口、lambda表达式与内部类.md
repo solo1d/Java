@@ -400,7 +400,7 @@ public class Termc {
 }
 
 
-class TimedGree extends Termc{
+class TimedGree extends Termc{  // 继承 Termc 类
     public void greet()
     {
         javax.swing.Timer t = new Timer(1000, super::greet);
