@@ -3,12 +3,12 @@
 - [AOP](#AOP)
   - [使用String的API接口实现AOP](#使用String的API接口实现AOP)
   - [自定义来实现AOP](#自定义来实现AOP)
-  - 
+  - [注解实现](#注解实现)
 
 
 
 
-## AOP
+# AOP
 
 AOP 的底层是基于动态代理的。
 
@@ -24,7 +24,7 @@ AOP 的底层是基于动态代理的。
 
 <img src="assets/image-20230403170606580.png" alt="image-20230403170606580" style="zoom:70%;" />
 
-### 使用String的API接口实现AOP
+## 使用String的API接口实现AOP
 
 **主要SpringAPI接口实现**
 
@@ -169,7 +169,7 @@ AOP 的底层是基于动态代理的。
 
 
 
-### 自定义来实现AOP
+## 自定义来实现AOP
 
 **主要是切面定义**
 
@@ -289,6 +289,154 @@ AOP 的底层是基于动态代理的。
     ```
 
 - 
+
+
+
+## 注解实现
+
+
+
+- AnnotationPointCut.java
+
+  - ```java
+    package com.kuang.diy;
+    
+    import org.aspectj.lang.ProceedingJoinPoint;
+    import org.aspectj.lang.annotation.After;
+    import org.aspectj.lang.annotation.Around;
+    import org.aspectj.lang.annotation.Aspect;
+    import org.aspectj.lang.annotation.Before;
+    
+    // 方式三： 使用注解方式实现AOP
+    @Aspect     // 标柱这个类是一个切面
+    public class AnnotationPointCut {
+        // 切入点
+        @Before("execution(* com.kuang.service.UserServiceImpl.*(..))")
+        public void before()
+        {
+            System.out.println("=====方法执行前====== AnnotationPointCut");
+        }
+    
+        // 切入点
+        @After("execution(* com.kuang.service.UserServiceImpl.*(..))")
+        public void fater()
+        {
+            System.out.println("=====方法执行后====== AnnotationPointCut");
+        }
+    
+        // 环绕增强， 我们可以给定一个参数，代表我们要获取处理切入的点：
+        @Around("execution(* com.kuang.service.UserServiceImpl.*(..))")
+        public void around(ProceedingJoinPoint jp) throws Throwable {
+            // 该函数的执行顺序：  环绕前->打印签名->方法执行前-> 执行方法 -> 环绕后 -> 方法执行后   结束
+            System.out.println("=====环绕前====== AnnotationPointCut");
+            // 获得和打印签名; 输出： void com.kuang.service.UserService.add()
+            System.out.println(jp.getSignature());
+            // 执行方法
+            Object proceed = jp.proceed();
+            System.out.println("=====环绕后====== AnnotationPointCut");
+        }
+    
+    }
+    ```
+
+- applicationContext.xml
+
+  - ```xml
+    <?xml version="1.0" encoding="UTF-8"?>
+    <beans xmlns="http://www.springframework.org/schema/beans"
+    	   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    	   xmlns:aop="http://www.springframework.org/schema/aop"
+    	   xsi:schemaLocation="http://www.springframework.org/schema/beans
+            http://www.springframework.org/schema/beans/spring-beans.xsd
+            http://www.springframework.org/schema/aop
+            http://www.springframework.org/schema/aop/spring-aop.xsd">
+    
+      <!-- 注册 bean -->
+    	<bean id="userService" class="com.kuang.service.UserServiceImpl"/>
+    	<bean id="log" class="com.kuang.log.Log"/>
+    	<bean id="afterLog" class="com.kuang.log.AfterLog"/>
+    
+    	<!-- 方式三：使用注解方式实现AOP -->
+    	<bean id="annotationPointCut" class="com.kuang.diy.AnnotationPointCut"/>
+    	<!-- 开启AOP注解支持-->
+    	<aop:aspectj-autoproxy/>
+    
+    </beans>
+    ```
+
+- UserService.java
+
+  - ```java
+    package com.kuang.service;
+    
+    public interface UserService {
+        public void add();
+        public void delete();
+        public void update();
+        public void select();
+    }
+    ```
+
+- UserServiceImpl.java
+
+  - ```java
+    package com.kuang.service;
+    
+    public class UserServiceImpl implements UserService{
+        @Override
+        public void add() {
+            System.out.println("增加了一个用户");
+        }
+    
+        @Override
+        public void delete() {
+            System.out.println("删除了一个用户");
+        }
+    
+        @Override
+        public void update() {
+            System.out.println("更新了一个用户");
+        }
+    
+        @Override
+        public void select() {
+            System.out.println("查询了一个用户");
+        }
+    }
+    ```
+
+- MyTest.java
+
+  - ```java
+    import com.kuang.service.UserService;
+    import org.springframework.context.ApplicationContext;
+    import org.springframework.context.support.ClassPathXmlApplicationContext;
+    
+    public class MyTest {
+        public static void main(String[] args) {
+          ApplicationContext context =  new ClassPathXmlApplicationContext("applicationContext.xml");
+            UserService userService = (UserService)context.getBean("userService");
+            userService.add();
+        }
+    }
+    
+    /* 输出：
+    =====环绕前====== AnnotationPointCut
+    void com.kuang.service.UserService.add()
+    =====方法执行前====== AnnotationPointCut
+    增加了一个用户
+    =====环绕后====== AnnotationPointCut
+    =====方法执行后====== AnnotationPointCut
+    */
+    ```
+
+  - 
+
+
+
+
+
+
 
 
 
