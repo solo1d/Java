@@ -130,10 +130,15 @@ String toUpperCase ()
 			/* 返回一个新字符串， 这个字符串将原始字符串中的大写字母改为小写字母，或者将原始字符串中的所有小写字母改成了大写字母 */
 
 String trim ()			 *** 重要
+String strip ()			 *** 重要
 			/* 返回一个新字符串，这个字符串将删除了原始字符串头部和尾部的空格 */
   
 String join (CharSequence delimiter, CharSequence... elements)			 *** 重要
 			/* 返回一个新字符串， 用给定的定界符链接所有元素 */
+
+String repeat(int count)		*** 重要
+  		/* 返回一个字符串，该字符串的值是重复count次的给定字符串的连接。 如果字符串为空或count为零，则返回空字符串, "s".repeat(5);   会返回  由5个s 组成的一个字符串 ("sssss") */ 
+  
 ```
 
 
