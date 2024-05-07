@@ -670,7 +670,7 @@ c 和 p 命名空间注入, 在使用前需要两个约束
     <bean id="cat" class="com.kuang.pojo.Cat" />
     <bean id="dog" class="com.kuang.pojo.Dog" />
 	<!-- 
-		byName : 会在容器上下文中查找，和自己set方法后面的值对应的 beanid! (也就是 setDog(Dog dog) 最后的 dog 参数名称 )
+		byName : 会在容器上下文中查找，和自己set方法后面的值对应的 bean id! (也就是 setDog(Dog dog) 最后的 dog 参数名称 )
 	-->
   
     <bean id="peopel" class="com.kuang.pojo.Peopel" autowire="byName">
@@ -915,12 +915,20 @@ c 和 p 命名空间注入, 在使用前需要两个约束
       
           <!-- 指定要扫描的包，这个包下的注释就会生效 -->
           <context:component-scan base-package="com.kuang"/>
+               <!-- 扫描排除规则
+               type: 设置排除或包含的依据  ，
+                      type="annotation"  根据注解排除， expression 中设置要排除的注解的全类名
+                      type="assignable" 根据类型排除， expression 中设置要排除的类的全类名
+               expression: 表达式
+               -->
+              <context:exclude-filter type="annotation" expression="com.apple"/>
           <context:annotation-config/>
+        	
       </beans>
       ```
-
+  
   - User.java
-
+  
     - ```java
       package com.kuang.pojo;
       
